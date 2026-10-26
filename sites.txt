@@ -1,0 +1,15 @@
+# Публичные прод-адреса (источник — роутеры Traefik на VPS, сверено 26.10.2026).
+# Годен ответ 2xx/3xx и TLS-сертификат дольше 14 дней. Новый сайт — добавить строку.
+https://lyssov.kz/
+https://nomadroasters.kz/
+https://admin.nomadroasters.kz/
+https://lvldoner.kz/
+https://api.lvldoner.kz/health
+https://owner.lvldoner.kz/
+https://lvl-os.lyssovai.com/
+https://hr.lyssovai.com/
+https://academy.forevent.kz/
+https://studio.forevent.kz/
+https://orda.lyssovai.com/
+https://vystrel.lyssovai.com/
+https://control.lyssovai.com/health

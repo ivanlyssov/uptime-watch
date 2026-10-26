@@ -1,0 +1,57 @@
+# Внешняя проверка прод-сайтов каждые 15 минут — с серверов GitHub, не с Mac.
+# Подробности — README.md и check.py.
+name: uptime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      extra_urls:
+        description: "Тест: доп. адреса через пробел (в состояние не пишутся, каждый тест = одно сообщение)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: write   # gh workflow enable — не даём GitHub выключить расписание за 60 дней тишины
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Восстановить состояние инцидентов
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: uptime-state-${{ github.run_id }}
+          restore-keys: uptime-state-
+
+      - name: Проверить сайты
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EXTRA_URLS: ${{ inputs.extra_urls }}
+          STATE_FILE: state/state.json
+        run: python3 check.py
+
+      - name: Сохранить состояние
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: uptime-state-${{ github.run_id }}
+
+      - name: Не дать GitHub усыпить расписание
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable uptime.yml --repo "$GITHUB_REPOSITORY"
