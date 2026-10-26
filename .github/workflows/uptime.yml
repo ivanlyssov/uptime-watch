@@ -1,5 +1,5 @@
 # Внешняя проверка прод-сайтов каждые 15 минут — с серверов GitHub, не с Mac.
-# Подробности — README.md и check.py.
+# Подробности — README.md и check.py. Cron GitHub может опаздывать на 5–30 мин — это норма.
 name: uptime
 
 on:
