@@ -40,6 +40,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           EXTRA_URLS: ${{ inputs.extra_urls }}
           STATE_FILE: state/state.json
+          GH_TOKEN: ${{ github.token }}
         run: python3 check.py
 
       - name: Сохранить состояние

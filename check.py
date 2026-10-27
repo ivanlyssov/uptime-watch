@@ -16,6 +16,7 @@ TLS-сертификат живёт дольше CERT_DAYS дней. Неуда�
 Код выхода: 0 — проверка прошла (даже если сайты лежат, о них сказано в Telegram);
 1 — сообщение НЕ доставлено или нет секретов: о таком прогоне должен знать GitHub.
 """
+import calendar
 import json
 import os
 import socket
@@ -79,6 +80,29 @@ def check(urls):
     return bad
 
 
+TRIGGER = "Запуск с VPS (cron → workflow_dispatch)"
+
+
+def trigger_problem():
+    """Каждые 15 минут проверку запускает cron на VPS; cron GitHub ненадёжен и срабатывает
+    раз в несколько часов. Зато когда срабатывает — смотрим, жив ли VPS-триггер."""
+    if os.environ.get("GITHUB_EVENT_NAME") != "schedule":
+        return None  # dispatch-запуск сам доказывает, что триггер жив
+    api = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs?event=workflow_dispatch&per_page=1"
+    req = urllib.request.Request(api, headers={"Authorization": f"Bearer {os.environ.get('GH_TOKEN', '')}",
+                                               "Accept": "application/vnd.github+json", "User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            runs = json.load(r)["workflow_runs"]
+    except Exception as e:
+        print(f"не узнал время последнего dispatch: {e}", file=sys.stderr)
+        return None
+    if not runs:
+        return "ни одного запуска"
+    age = time.time() - calendar.timegm(time.strptime(runs[0]["created_at"], "%Y-%m-%dT%H:%M:%SZ"))
+    return f"последний запуск {age / 3600:.1f} ч назад — проверить cron и токен на VPS" if age > 3600 else None
+
+
 def read_list(path):
     return [l.strip() for l in path.read_text().splitlines() if l.strip() and not l.startswith("#")]
 
@@ -94,6 +118,8 @@ def main():
     now = time.time()
 
     bad = check(sites + extra)
+    if p := trigger_problem():
+        bad[TRIGGER] = p
     for u in sites + extra:
         print(f"{'FAIL' if u in bad else 'ok  '} {u}  {bad.get(u, '')}")
 
@@ -113,7 +139,7 @@ def main():
             new_state[u] = {**prev, "alerted": now}
         else:
             new_state[u] = prev
-    up = [u for u in state if u not in bad and u in sites]
+    up = [u for u in state if u not in bad and (u in sites or u == TRIGGER)]
 
     STATE.parent.mkdir(parents=True, exist_ok=True)
     lines = []
