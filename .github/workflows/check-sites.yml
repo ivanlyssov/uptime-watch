@@ -4,7 +4,7 @@ name: uptime
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "7,22,37,52 * * * *"   # не ровно :00/:15 — там пик нагрузки GitHub
   workflow_dispatch:
     inputs:
       extra_urls:
@@ -54,4 +54,4 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow enable uptime.yml --repo "$GITHUB_REPOSITORY"
+        run: gh workflow enable check-sites.yml --repo "$GITHUB_REPOSITORY"

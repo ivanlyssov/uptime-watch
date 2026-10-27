@@ -10,5 +10,5 @@ TLS-сертификат дольше 14 дней. Упал сайт — одн�
   `TELEGRAM_CHAT_ID` — GitHub Secrets.
 - `tg_post.py` — побайтовая копия `_os/bin/tg_post.py` (политика повторов Telegram),
   сверяет `_os/bin/tg-policy-check.sh`.
-- Тест: Actions → uptime → Run workflow → в `extra_urls` битый адрес → ровно одно сообщение.
+- Тест: Actions → uptime → Run workflow (файл check-sites.yml) → в `extra_urls` битый адрес → ровно одно сообщение.
 - Красный прогон = сообщение не доставлено или нет секретов (не «сайт лежит»).
